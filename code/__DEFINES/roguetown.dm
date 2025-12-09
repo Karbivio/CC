@@ -88,9 +88,10 @@ Balloon Alert / Floating Text defines
 	/datum/species/kobold,\
 	/datum/species/harpy,\
 	/datum/species/goblinp,\
+	/datum/species/dullahan,\ // CC Edit
 
 #define RACES_DESPISED \
-	/datum/species/dullahan,\
+	// /datum/species/dullahan,\ // CC Edit
 
 #define RACES_CONSTRUCT \
 	/datum/species/construct/metal,\
