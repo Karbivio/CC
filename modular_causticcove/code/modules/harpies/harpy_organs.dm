@@ -20,7 +20,6 @@
 	desc = "Project your voice through song."
 	icon_icon = 'icons/obj/surgery.dmi'
 	button_icon_state = "harpysong"
-	var/obj/item/rogue/instrument/singy = new /obj/item/rogue/instrument/vocals/harpy_song()
 
 /datum/action/item_action/organ_action/use/harpy_sing/Trigger()
 	if(do_after(owner, 2 SECONDS, owner))
