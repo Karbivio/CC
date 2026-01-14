@@ -1,6 +1,6 @@
 /obj/structure/roguemachine/vendor
 	name = "PEDDLER"
-	desc = "The stomach of this thing can been stuffed with fun things for you to buy."
+	desc = "A half-alive magitech vending machine. The stomach of this thing can be stuffed with fun things to buy."
 	icon = 'icons/roguetown/misc/machines.dmi'
 	icon_state = "streetvendor1"
 	density = TRUE
@@ -425,3 +425,26 @@
 		held_items[P]["NAME"] = P.name
 		held_items[P]["PRICE"] = 30
 	update_icon()
+
+/obj/structure/roguemachine/vendor/tower
+	keycontrol = "university"
+
+/obj/structure/roguemachine/vendor/tower/Initialize()
+	. = ..()
+	for(var/X in list(
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,
+		/obj/item/reformation_gem,))
+		var/obj/P = new X(src)
+		held_items[P] = list()
+		held_items[P]["NAME"] = P.name
+		held_items[P]["PRICE"] = 15
+	update_icon()
+	

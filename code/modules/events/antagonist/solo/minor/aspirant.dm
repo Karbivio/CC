@@ -21,8 +21,8 @@
 		"Court Magician"
 	)
 
-	base_antags = 1
-	maximum_antags = 2
+	base_antags = 1 
+	maximum_antags = 1 //CC Edit: Reduces to 1. Was 2.
 
 	earliest_start = 0 SECONDS
 
@@ -37,7 +37,7 @@
 	for(var/datum/mind/antag_mind as anything in setup_minds)
 		add_datum_to_mind(antag_mind, antag_mind.current)
 
-	var/list/helping = list("Consort" ,"Hand" ,"Suitor" ,"Prince" ,"Captain" ,"Steward" ,"Court Magician ","Archivist", "Knight", "Knight Captain", "Marshal", "Councillor", "Town Crier","Veteran")
+	var/list/helping = list("Consort" ,"Hand" ,"Suitor" ,"Prince" ,"Captain" ,"Steward" ,"Court Magician ","Archivist", "Knight", "Knight Captain", "Marshal", "Councillor", "Town Crier", "Keeper", "Veteran")
 	var/list/possible_helpers = list()
 	for(var/mob/living/living in GLOB.human_list)
 		if(!living.client)

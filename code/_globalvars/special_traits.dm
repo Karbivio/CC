@@ -40,6 +40,8 @@ GLOBAL_LIST_INIT(special_traits, build_special_traits())
 	apply_prefs_race_bonus(character, player)
 	if(player.prefs.dnr_pref)
 		apply_dnr_trait(character, player)
+	if(player.prefs.qsr_pref)
+		apply_qsr_trait(character, player)
 	if(player.prefs.loadout)
 		character.mind.special_items[player.prefs.loadout::name] += player.prefs.loadout::path
 	if(player.prefs.loadout2)
@@ -56,6 +58,16 @@ GLOBAL_LIST_INIT(special_traits, build_special_traits())
 	var/datum/job/assigned_job = SSjob.GetJob(character.mind?.assigned_role)
 	if(assigned_job)
 		assigned_job.clamp_stats(character)
+	check_trait_incompatibilities(character)
+
+/// Check for incompatible traits and remove one of them
+/proc/check_trait_incompatibilities(mob/living/carbon/human/H)
+	// Easy Dismemberment & Critical Resistance get both cancelled out
+	if(HAS_TRAIT(H, TRAIT_EASYDISMEMBER) && HAS_TRAIT(H, TRAIT_CRITICAL_RESISTANCE))
+		REMOVE_TRAIT(H, TRAIT_EASYDISMEMBER, null) // Doesn't care for source, they ARE getting canceled
+		REMOVE_TRAIT(H, TRAIT_CRITICAL_RESISTANCE, null)
+		to_chat(H, span_warning("My limbs are too frail and my body too tough... the contradiction leaves me unable to resist critical wounds."))
+	return TRUE
 
 /proc/apply_prefs_virtue(mob/living/carbon/human/character, client/player)
 	if (!player)
@@ -70,7 +82,7 @@ GLOBAL_LIST_INIT(special_traits, build_special_traits())
 	if(istype(player.prefs.selected_patron, /datum/patron/inhumen))
 		heretic = TRUE
 
-	if(player.prefs.statpack.name == "Virtuous")
+	if(player.prefs.statpack.virtuous)
 		virtuous = TRUE
 
 	var/datum/virtue/virtue_type = player.prefs.virtue
@@ -125,6 +137,9 @@ GLOBAL_LIST_INIT(special_traits, build_special_traits())
 
 /proc/apply_dnr_trait(mob/living/carbon/human/character, client/player)
 	ADD_TRAIT(player.mob, TRAIT_DNR, TRAIT_GENERIC)
+
+/proc/apply_qsr_trait(mob/living/carbon/human/character, client/player)
+	ADD_TRAIT(player.mob, TRAIT_QUICKSILVERRESISTANT, TRAIT_GENERIC)
 
 /proc/apply_prefs_special(mob/living/carbon/human/character, client/player)
 	if(!player)

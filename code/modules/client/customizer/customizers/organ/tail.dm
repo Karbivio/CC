@@ -78,6 +78,7 @@
 	sprite_accessories = list(
 		/datum/sprite_accessory/tail/shark,
 		/datum/sprite_accessory/tail/sharknofin,
+		/datum/sprite_accessory/tail/large_tails/large_shark, //Caustic Edit - Give the shark the large shark tail
 		)
 
 /datum/customizer/organ/tail/tiefling
@@ -91,8 +92,13 @@
 	sprite_accessories = list(
 		/datum/sprite_accessory/tail/tiefling,
 		/datum/sprite_accessory/tail/tiefling/heart,
+		/datum/sprite_accessory/tail/large_snake,
+		/datum/sprite_accessory/tail/large_snake_plain,
+		/datum/sprite_accessory/tail/batl,
+		/datum/sprite_accessory/tail/bats,
+		/datum/sprite_accessory/tail/murid,
+		/datum/sprite_accessory/tail/guilmon
 		)
-	allows_accessory_color_customization = FALSE
 
 /datum/customizer/organ/tail/demihuman
 	customizer_choices = list(/datum/customizer_choice/organ/tail/demihuman)
@@ -169,11 +175,11 @@
 		/datum/sprite_accessory/tail/haven,
 		/datum/sprite_accessory/tail/swallow,
 		/datum/sprite_accessory/tail/zorzor,
+		/datum/sprite_accessory/tail/large_snake_plain,
 		//Caustic edit
 		/datum/sprite_accessory/tail/tiefling,
 		/datum/sprite_accessory/tail/tiefling/heart,
 		//Caustic edit end
-
 		)
 
 /datum/customizer/organ/tail/anthro
@@ -252,7 +258,9 @@
 		/datum/sprite_accessory/tail/forked_long,
 		/datum/sprite_accessory/tail/haven,
 		/datum/sprite_accessory/tail/swallow,
-		/datum/sprite_accessory/tail/zorzor
+		/datum/sprite_accessory/tail/zorzor,
+		/datum/sprite_accessory/tail/large_snake,
+		/datum/sprite_accessory/tail/large_snake_plain
 		)
 
 /datum/customizer/organ/tail/dullahan

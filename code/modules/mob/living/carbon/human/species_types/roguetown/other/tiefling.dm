@@ -20,7 +20,7 @@
 	species_traits = list(EYECOLOR,HAIR,FACEHAIR,LIPS,STUBBLE,OLDGREY)
 	inherent_traits = list(TRAIT_NOMOBSWAP)
 	default_features = MANDATORY_FEATURE_LIST
-	use_skintones = 1
+	use_skintones = TRUE
 	disliked_food = NONE
 	liked_food = NONE
 	possible_ages = ALL_AGES_LIST
@@ -137,7 +137,21 @@
 		"Voibion" = SKIN_COLOR_VOIBION,
 		"Chyerno" = SKIN_COLOR_CHYERNO,
 		"Drema"	= SKIN_COLOR_DREMA,
-		"Chir"	= SKIN_COLOR_CHIR
+		"Chir"	= SKIN_COLOR_CHIR,
+		"Vesyl"	= SKIN_COLOR_VESYL,
+		"Krosec" = SKIN_COLOR_KROSEC,
+		"Asza" = SKIN_COLOR_ASZA,
+		"Krizzsha" = SKIN_COLOR_KRIZZSHA,
+		"Tosiz" = SKIN_COLOR_TOSIZ,
+		"Velothel" = SKIN_COLOR_VELOTHEL,
+		"Xir" = SKIN_COLOR_XIR,
+		"Esse" = SKIN_COLOR_ESSE,
+		//Caustic edit
+		"Seeker" = SKIN_COLOR_SEEKER,
+		"Splendorous" = SKIN_COLOR_SPLENDOROUS,
+		"Witness"	= SKIN_COLOR_WITNESS,
+		"Blessed"	= SKIN_COLOR_BLESSED
+		//Caustic edit end
 	)
 
 /datum/species/tieberian/get_hairc_list()

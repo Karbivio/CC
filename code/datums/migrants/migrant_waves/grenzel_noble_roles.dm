@@ -1,5 +1,5 @@
 #define CTAG_GRENZEL_ENVOY "grenzel_envoy"
-#define CTAG_GRENZEL_DOPPEL "grenzel_doppel"
+#define CTAG_GRENZEL_GUARD "grenzel_guard"
 #define CTAG_GRENZEL_PRIEST "grenzel_priest"
 
 /datum/migrant_role/grenzel/envoy
@@ -42,7 +42,7 @@
 	..()
 	head = /obj/item/clothing/head/roguetown/circlet
 	neck = /obj/item/clothing/neck/roguetown/gorget
-	cloak = /obj/item/clothing/cloak/stabard/surcoat/bailiff
+	cloak = /obj/item/clothing/cloak/tabard/stabard/surcoat/bailiff
 	armor = /obj/item/clothing/suit/roguetown/armor/leather
 	wrists = /obj/item/clothing/wrists/roguetown/bracers/leather
 	gloves = /obj/item/clothing/gloves/roguetown/angle/grenzelgloves
@@ -65,17 +65,17 @@
 	H.grant_language(/datum/language/grenzelhoftian)
 
 /datum/migrant_role/grenzel/bodyguard
-	name = "Doppelsoldner"
-	greet_text = "You are a dilligent soldier in employ of the Envoy for protection and to assure that their mission goes as planned."
+	name = "Leibwachter"
 	allowed_sexes = list(MALE, FEMALE)
 	allowed_races = RACES_NO_CONSTRUCT
-	advclass_cat_rolls = list(CTAG_GRENZEL_DOPPEL = 20)
+	advclass_cat_rolls = list(CTAG_GRENZEL_GUARD = 20)
 
-/datum/advclass/grenzel_doppel
-	name = "Doppelsoldner"
+/datum/advclass/grenzel_guard
+	name = "Leibwachter"
+	tutorial = "You are a dilligent soldier in employ of the Envoy for protection and to assure that their mission goes as planned."
 	outfit = /datum/outfit/job/roguetown/grenzel/doppel
 	traits_applied = list(TRAIT_HEAVYARMOR, TRAIT_STEELHEARTED)
-	category_tags = list(CTAG_GRENZEL_DOPPEL)
+	category_tags = list(CTAG_GRENZEL_GUARD)
 	subclass_stats = list(
 		STATKEY_STR = 2,
 		STATKEY_WIL = 2,
@@ -108,7 +108,7 @@
 	neck = /obj/item/clothing/neck/roguetown/gorget/steel
 	shirt = /obj/item/clothing/suit/roguetown/armor/gambeson/heavy/grenzelhoft
 	head = /obj/item/clothing/head/roguetown/grenzelhofthat
-	armor = /obj/item/clothing/suit/roguetown/armor/plate/blacksteel_half_plate
+	armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/blacksteel
 	pants = /obj/item/clothing/under/roguetown/heavy_leather_pants/grenzelpants
 	shoes = /obj/item/clothing/shoes/roguetown/grenzelhoft
 	gloves = /obj/item/clothing/gloves/roguetown/angle/grenzelgloves
@@ -124,14 +124,14 @@
 	H.grant_language(/datum/language/grenzelhoftian)
 
 /datum/migrant_role/grenzel/priest
-	name = "Priest"
+	name = "Envoy Priest"
 	greet_text = "Nominally the envoy's spiritual advisor, your real power extends beyond religious matters. Protect interests of the Holy See of the Ten."
 	allowed_sexes = list(MALE, FEMALE)
 	allowed_races = RACES_NO_CONSTRUCT
 	advclass_cat_rolls = list(CTAG_GRENZEL_PRIEST = 20)
 
 /datum/advclass/grenzel_priest
-	name = "Priest"
+	name = "Envoy Priest"
 	outfit = /datum/outfit/job/roguetown/grenzel/doppel
 	traits_applied = list(TRAIT_CHOSEN, TRAIT_RITUALIST, TRAIT_GRAVEROBBER)
 	category_tags = list(CTAG_GRENZEL_PRIEST)
@@ -144,7 +144,8 @@
 	subclass_stats = list(
 		/datum/skill/combat/wrestling= SKILL_LEVEL_EXPERT,
 		/datum/skill/combat/unarmed= SKILL_LEVEL_JOURNEYMAN,
-		/datum/skill/combat/polearms= SKILL_LEVEL_JOURNEYMAN,
+		/datum/skill/combat/staves = SKILL_LEVEL_JOURNEYMAN,
+		/datum/skill/combat/polearms = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/misc/reading = SKILL_LEVEL_LEGENDARY,
 		/datum/skill/craft/alchemy= SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/misc/medicine= SKILL_LEVEL_EXPERT,
@@ -171,5 +172,5 @@
 	C.grant_miracles(H, cleric_tier = CLERIC_T4, passive_gain = CLERIC_REGEN_MAJOR, start_maxed = TRUE)
 
 #undef CTAG_GRENZEL_ENVOY
-#undef CTAG_GRENZEL_DOPPEL
+#undef CTAG_GRENZEL_GUARD
 #undef CTAG_GRENZEL_PRIEST

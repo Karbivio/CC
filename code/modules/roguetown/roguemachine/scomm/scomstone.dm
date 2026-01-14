@@ -100,8 +100,6 @@
 		. += "Its designation is #[scomstone_number]."
 
 /obj/item/scomstone/proc/repeat_message(message, atom/A, tcolor, message_language)
-	if(A == src)
-		return
 	if(!ismob(loc))
 		return
 	if(tcolor)
@@ -147,11 +145,23 @@
 	hearrange = 0
 	sellprice = 100
 
+/obj/item/scomstone/garrison/equipped(mob/living/user, slot)
+	. = ..()
+	if(slot == SLOT_RING)
+		ADD_TRAIT(user, TRAIT_GARRISON_ITEM, "[ref(src)]")
+
+/obj/item/scomstone/garrison/dropped(mob/living/user)
+	..()
+	REMOVE_TRAIT(user, TRAIT_GARRISON_ITEM, "[ref(src)]")
+
 /obj/item/scomstone/garrison/attack_right(mob/living/carbon/human/user)
 	user.changeNext_move(CLICK_CD_INTENTCAP)
 	if(on_cooldown)
 		to_chat(user, span_warning("The gemstone inside the ring radiates heat. It's still cooling down from its last use."))
 		playsound(loc, 'sound/misc/machineno.ogg', 100, FALSE, -1)
+		return
+	if(!get_location_accessible(user, BODY_ZONE_PRECISE_MOUTH, grabs = TRUE))
+		to_chat(user, span_warning("My mouth is covered!"))
 		return
 	visible_message(span_notice ("[user] presses their ring against their mouth."))
 	var/input_text = input(user, "Enter your message:", "Message")
@@ -163,7 +173,7 @@
 	user.whisper(input_text)
 	if(length(input_text) > 100) //When these people talk too much, put that shit in slow motion, yeah
 		input_text = "<small>[input_text]</small>"
-
+	playsound(loc, 'sound/misc/garrisonscom.ogg', 100, FALSE, -1)
 	if(garrisonline)
 		input_text = "<big><span style='color: [GARRISON_SCOM_COLOR]'>[input_text]</span></big>" //Prettying up for Garrison line
 		for(var/obj/item/scomstone/bad/garrison/S in SSroguemachine.scomm_machines)
@@ -185,7 +195,7 @@
 		S.repeat_message(input_text, src, usedcolor)
 	SSroguemachine.crown?.repeat_message(input_text, src, usedcolor)
 	on_cooldown = TRUE
-	
+
 	//Log messages that aren't sent on the garrison line.
 	GLOB.broadcast_list += list(list(
 	"message"   = input_text,
@@ -215,3 +225,12 @@
 	sellprice = 20
 	messagereceivedsound = 'sound/misc/garrisonscom.ogg'
 	hearrange = 0
+
+/obj/item/scomstone/bad/garrison/equipped(mob/living/user, slot)
+	. = ..()
+	if(slot == SLOT_RING)
+		ADD_TRAIT(user, TRAIT_GARRISON_ITEM, "[ref(src)]")
+
+/obj/item/scomstone/bad/garrison/dropped(mob/living/user)
+	..()
+	REMOVE_TRAIT(user, TRAIT_GARRISON_ITEM, "[ref(src)]")

@@ -13,7 +13,7 @@
 /obj/item/clothing/neck/roguetown/gorget/copper,
 /obj/item/clothing/wrists/roguetown/bracers/copper,
 /obj/item/clothing/head/roguetown/helmet/coppercap,
-/obj/item/clothing/suit/roguetown/armor/plate/half/aalloy,
+/obj/item/clothing/suit/roguetown/armor/plate/cuirass/aalloy,
 /obj/structure/closet/crate/chest,
 /turf/open/floor/rogue/cobblerock,
 /area/rogue/under/tomb/indoors)
@@ -29,7 +29,7 @@
 /turf/open/floor/rogue/dirt/road,
 /area/rogue/under/tomb)
 "av" = (
-/obj/machinery/light/rogue/wallfire/candle/weak/l,
+/obj/machinery/light/rogue/candle/weak/l,
 /turf/open/floor/rogue/ruinedwood/chevron,
 /area/rogue/under/tomb/indoors)
 "aw" = (
@@ -80,7 +80,7 @@
 /area/rogue/under/tomb)
 "aZ" = (
 /obj/structure/table/wood,
-/obj/machinery/light/rogue/wallfire/candle/weak/l,
+/obj/machinery/light/rogue/candle/weak/l,
 /obj/item/reagent_containers/food/snacks/rogue/cheddar/aged,
 /obj/item/reagent_containers/glass/cup/skull,
 /turf/open/floor/rogue/cobblerock,
@@ -88,7 +88,6 @@
 "fh" = (
 /obj/structure/table/vtable,
 /obj/item/paper/scroll,
-/obj/item/clothing/ring/gold,
 /turf/open/floor/rogue/ruinedwood/chevron,
 /area/rogue/under/tomb/indoors)
 "iS" = (
@@ -98,7 +97,7 @@
 /obj/item/reagent_containers/food/snacks/grown/rogue/pipeweeddry,
 /obj/item/reagent_containers/food/snacks/grown/rogue/pipeweeddry,
 /obj/item/reagent_containers/glass/cup/skull,
-/obj/item/reagent_containers/glass/cup/silver,
+/obj/effect/spawner/lootdrop/cheap_tableware_spawner,
 /turf/open/floor/rogue/ruinedwood/chevron,
 /area/rogue/under/tomb/indoors)
 "lx" = (
@@ -116,18 +115,16 @@
 "vD" = (
 /obj/structure/table/wood,
 /obj/item/candle/skull/lit,
-/obj/item/reagent_containers/glass/bottle/rogue/healthpotnew,
 /obj/item/reagent_containers/glass/bottle/rogue/redwine,
 /obj/item/roguestatue/gold,
 /turf/open/floor/rogue/ruinedwood/chevron,
 /area/rogue/under/tomb/indoors)
 "zA" = (
-/obj/machinery/light/rogue/wallfire/candle/r,
+/obj/machinery/light/rogue/candle/r,
 /turf/open/floor/rogue/ruinedwood/chevron,
 /area/rogue/under/tomb/indoors)
 "HU" = (
 /obj/structure/table/vtable/v2,
-/obj/item/book/godofdreamsandnightmares,
 /obj/item/natural/feather,
 /turf/open/floor/rogue/ruinedwood/chevron,
 /area/rogue/under/tomb/indoors)
@@ -140,7 +137,7 @@
 /turf/open/floor/rogue/ruinedwood/chevron,
 /area/rogue/under/tomb/indoors)
 "TY" = (
-/obj/machinery/light/rogue/wallfire/candle/r,
+/obj/machinery/light/rogue/candle/r,
 /mob/living/carbon/human/species/skeleton/npc/bogguard,
 /turf/open/floor/rogue/ruinedwood/chevron,
 /area/rogue/under/tomb/indoors)

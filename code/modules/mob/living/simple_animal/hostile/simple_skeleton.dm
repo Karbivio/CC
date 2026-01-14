@@ -1,7 +1,7 @@
 /mob/living/simple_animal/hostile/rogue/skeleton
 	name = "Skeleton"
-	desc = ""
-	icon = 'modular_hearthstone/icons/mob/skeletons.dmi'
+	desc = "A shambling anatomy of bleached bones kept together only by necromantic forces."
+	icon = 'icons/mob/skeletons.dmi'
 	icon_state = "skeleton"
 	icon_living = "skeleton"
 	icon_dead = "skeleton_dead"
@@ -35,6 +35,10 @@
 	faction = list("undead")
 	footstep_type = FOOTSTEP_MOB_BAREFOOT
 	del_on_death = TRUE
+	var/start_take_damage = FALSE
+	var/damage_check
+	var/wither = 2.5
+	var/newcolor = rgb(207, 135, 255) //used for livetime code.
 
 	can_have_ai = FALSE //disable native ai
 	AIStatus = AI_OFF
@@ -47,8 +51,7 @@
 
 /mob/living/simple_animal/hostile/rogue/skeleton/axe
 	name = "Skeleton"
-	desc = ""
-	icon = 'modular_hearthstone/icons/mob/skeletons.dmi'
+	icon = 'icons/mob/skeletons.dmi'
 	base_intents = list(/datum/intent/simple/axe/skeleton)
 	icon_state = "skeleton_axe"
 	icon_living = "skeleton_axe"
@@ -57,8 +60,7 @@
 
 /mob/living/simple_animal/hostile/rogue/skeleton/spear
 	name = "Skeleton"
-	desc = ""
-	icon = 'modular_hearthstone/icons/mob/skeletons.dmi'
+	icon = 'icons/mob/skeletons.dmi'
 	base_intents = list(/datum/intent/simple/spear/skeleton)
 	icon_state = "skeleton_spear"
 	icon_living = "skeleton_spear"
@@ -69,8 +71,7 @@
 
 /mob/living/simple_animal/hostile/rogue/skeleton/guard
 	name = "Skeleton"
-	desc = ""
-	icon = 'modular_hearthstone/icons/mob/skeletons.dmi'
+	icon = 'icons/mob/skeletons.dmi'
 	base_intents = list(/datum/intent/simple/axe/skeleton)
 	icon_state = "skeleton_guard"
 	icon_living = "skeleton_guard"
@@ -81,8 +82,7 @@
 
 /mob/living/simple_animal/hostile/rogue/skeleton/bow
 	name = "Skeleton"
-	desc = ""
-	icon = 'modular_hearthstone/icons/mob/skeletons.dmi'
+	icon = 'icons/mob/skeletons.dmi'
 	icon_state = "skeleton_bow"
 	icon_living = "skeleton_bow"
 	icon_dead = ""
@@ -125,20 +125,30 @@
 		else
 			summoner = user.name
 	if (is_summoned || cabal_affine)
-		faction |= "cabal"
+		faction = list("cabal") //No mix undead faction and cabal, summoned skeletons can attack any undead, mark your friends
 	// adds the name of the summoner to the faction, to avoid the hooded "Unknown" bug with Skeleton IDs
 	if(user && user.mind && user.mind.current)
-		faction |= "[user.mind.current.real_name]_faction"
+		faction = list("[user.mind.current.real_name]_faction") //if you summon this, he not affected on cabal. This skeletons can attack any undead and other zizo affected characters
 		// lich also gets to have friendlies, as a treat
 		var/datum/antagonist/lich/lich_antag = user.mind.has_antag_datum(/datum/antagonist/lich)
 		if(lich_antag && user.real_name)
-			faction |= "[user.real_name]_faction"
+			faction = list("undead", "[user.mind.current.real_name]_faction", "[user.real_name]_faction") //no changes. Undead faction + lich_name faction
+	damage_check = world.time
+	if(is_summoned) //check, if it NOT summoned skeleton, he lifetime - infinity. For mapping-spawned skeltons
+		addtimer(CALLBACK(src, PROC_REF(deathtime)), 1 MINUTES)
 
-/mob/living/simple_animal/hostile/rogue/skeleton/Life()
+/mob/living/simple_animal/hostile/rogue/skeleton/proc/deathtime()
+	target.add_atom_colour(newcolor, ADMIN_COLOUR_PRIORITY)
+	start_take_damage = TRUE
+
+/mob/living/simple_animal/hostile/rogue/skeleton/Life(mob/user)
 	. = ..()
 	if(!target)
 		if(prob(60))
 			emote(pick("idle"), TRUE)
+	if(start_take_damage == TRUE)
+		if(world.time > damage_check + 5 SECONDS)
+			src.adjustFireLoss(8) //+- one minute for 100 HP (any skeleton) and two minute for guard skeleton (200 HP)
 
 /mob/living/simple_animal/hostile/rogue/skeleton/taunted(mob/user)
 	emote("aggro")
@@ -184,7 +194,7 @@
 /obj/item/skull
 	name = "skull"
 	desc = "A skull"
-	icon = 'modular_hearthstone/icons/mob/skeletons.dmi'
+	icon = 'icons/mob/skeletons.dmi'
 	icon_state = "skull"
 	w_class = WEIGHT_CLASS_SMALL
 

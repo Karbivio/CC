@@ -97,11 +97,11 @@ Balloon Alert / Floating Text defines
 
 #define RACES_ALL_KINDS list(RACES_DESPISED, RACES_SHUNNED, RACES_TOLERATED, RACES_RESPECTED, RACES_CONSTRUCT)	//Truely no restrictions
 
-#define ACCEPTED_RACES list(RACES_SHUNNED, RACES_TOLERATED, RACES_RESPECTED, RACES_CONSTRUCT)	//Allows all races except dallahun
+#define ACCEPTED_RACES list(RACES_SHUNNED, RACES_TOLERATED, RACES_RESPECTED, RACES_CONSTRUCT, RACES_DESPISED)	// CC Edit
 
-#define RACES_NO_CONSTRUCT list(RACES_SHUNNED, RACES_TOLERATED, RACES_RESPECTED)
+#define RACES_NO_CONSTRUCT list(RACES_SHUNNED, RACES_TOLERATED, RACES_RESPECTED, RACES_DESPISED) // CC Edit
 
-#define RACES_SHUNNED_UP list(RACES_SHUNNED, RACES_TOLERATED, RACES_RESPECTED)
+#define RACES_SHUNNED_UP list(RACES_SHUNNED, RACES_TOLERATED, RACES_RESPECTED, RACES_DESPISED) // CC Edit
 
 #define RACES_TOLERATED_UP list(RACES_TOLERATED, RACES_RESPECTED)
 
@@ -208,6 +208,8 @@ Balloon Alert / Floating Text defines
 
 #define ALL_PATRONS  list(/datum/patron/divine/undivided, /datum/patron/divine/astrata, /datum/patron/divine/noc, /datum/patron/divine/dendor, /datum/patron/divine/abyssor, /datum/patron/divine/ravox, /datum/patron/divine/necra, /datum/patron/divine/xylix, /datum/patron/divine/pestra, /datum/patron/divine/malum, /datum/patron/divine/eora, /datum/patron/old_god, /datum/patron/inhumen/zizo, /datum/patron/inhumen/graggar, /datum/patron/inhumen/matthios, /datum/patron/inhumen/baotha)
 
+#define ALL_SLAYER_PATRONS list(/datum/patron/divine/malum, /datum/patron/divine/ravox)
+
 #define PLATEHIT "plate"
 #define CHAINHIT "chain"
 #define SOFTHIT "soft"
@@ -279,6 +281,7 @@ GLOBAL_LIST_EMPTY(round_join_times)
 #define CTAG_TOWNER 		"CAT_TOWNER"  		// Villager class - Villagers can use it
 #define CTAG_ANTAG 			"CAT_ANTAG"  		// Antag class - results in an antag
 #define CTAG_BANDIT			"CAT_BANDIT"		// Bandit class - Tied to the bandit antag really
+#define CTAG_ASSASSIN		"CAT_ASSASSIN"		// Assassin classes - Tied to the assassin antag for specialization
 #define CTAG_CHALLENGE 		"CAT_CHALLENGE"  	// Challenge class - Meant to be free for everyone
 #define CTAG_VAGABOND		"CAT_VAGABOND"		// Vagabond class - start with nothing and work your way up
 #define CTAG_INQUISITION	"CAT_INQUISITION"	// For Orthodoxist subclasses
@@ -317,8 +320,6 @@ GLOBAL_LIST_EMPTY(round_join_times)
 #define CTAG_NIGHTMAIDEN	"CAT_NIGHTMAIDEN"	// Bathhouse Attendant's aesthetic choices.
 
 // List of mono-class categories. Only here for standardisation sake, but can be added on if desired.
-#define CTAG_DUNGEONEER		"CAT_DUNGEONEER"
-
 #define CTAG_BISHOP			"CAT_BISHOP"
 #define CTAG_MARTYR			"CAT_MARTYR"
 #define CTAG_ACOLYTE		"CAT_ACOLYTE"
@@ -338,6 +339,7 @@ GLOBAL_LIST_EMPTY(round_join_times)
 #define CTAG_SHOPHAND		"CAT_SHOPHAND"
 #define CTAG_ARCHIVIST		"CAT_ARCHIVIST"
 #define CTAG_TOWNCRIER		"CAT_TOWNCRIER"
+#define CTAG_KEEPER			"CAT_KEEPER"
 #define CTAG_TAILOR			"CAT_TAILOR"
 #define CTAG_SOILBRIDE		"CAT_SOILBRIDE"
 #define CTAG_INNKEEPER		"CAT_INNKEEPER"
@@ -357,6 +359,37 @@ GLOBAL_LIST_EMPTY(round_join_times)
 #define ARMOR_CLASS_LIGHT 1
 #define ARMOR_CLASS_MEDIUM 2
 #define ARMOR_CLASS_HEAVY 3
+
+//CC BEGIN
+
+/*
+	Defines the ratios for armors when calculating layered integrity damage. Higher values means a stronger ratio.
+
+	Ratios work by combining the values of both items and spreading damage across evenly. 
+	If you have an armor with an AC of "none", it will only convert a small portion of the total depending on the other item's weight.
+	
+	Ex:
+	(individual_armor / total_ratio)
+	AC_NONE+AC_MEDIUM = 80 total_ratio
+	20/80 = 25%
+	60/80 = 75%
+
+	The Medium Armor takes 75% damage, where the NONE takes only 25% of integrity damage. 
+	If you have 2 ratio's of the same amount, 50/50. 
+	Lets look at Heavy and Light. 
+
+	40+80 = 120
+	40/120 = 33%
+	80/120 = 66% -> Your Heavy Armor takes 66% of the damage, and 33% transfers under to your underarmor.
+*/
+#define AC_NONE_RATIO 20
+#define AC_LIGHT_RATIO 40
+#define AC_MEDIUM_RATIO 60
+#define AC_HEAVY_RATIO 80
+
+#define ARMOR_SHIELD TRUE //Used for armor types that are not meant to last permanently and act as an overshield across the entire body, I.E. Fateweaver/Dragonhide.
+
+//CC END
 
 /*
 	Defines for class select categories

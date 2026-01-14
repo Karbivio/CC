@@ -1,9 +1,8 @@
 /mob/living/carbon/Initialize()
 	..()
 
-	pain_threshold = HAS_TRAIT(src, TRAIT_ADRENALINE_RUSH) ? ((STAWIL + 5) * 10) : (STAWIL * 10)
-	if(has_flaw(/datum/charflaw/addiction/masochist)) // Masochists handle pain better by about 1 endurance point
-		pain_threshold += 10
+	pain_threshold = STAWIL * 10
+
 	if(HAS_TRAIT(src, TRAIT_NOPAIN))
 		pain_threshold = 250
 
@@ -59,6 +58,7 @@
 	AdjustKnockdown(levels * 20)
 
 /mob/living/carbon/swap_hand(held_index)
+	SEND_SIGNAL(src, COMSIG_CARBON_SWAPHANDS)
 	if(!held_index)
 		held_index = (active_hand_index % held_items.len)+1
 
@@ -85,13 +85,6 @@
 		H = hud_used.action_intent
 	oactive = FALSE
 	update_a_intents()
-
-	givingto = null
-
-	if(ishuman(src))
-		var/mob/living/carbon/human/H = src
-		if(H.has_status_effect(/datum/status_effect/buff/clash))
-			H.bad_guard(span_warning("I swapped away from the weapon!"))
 	return TRUE
 
 
@@ -158,14 +151,31 @@
 		var/mob/living/carbon/victim = hit_atom
 		if(victim.movement_type & FLYING)
 			return
+		if(cmode && m_intent == MOVE_INTENT_RUN)
+			if(ishuman(src))
+				var/mob/living/carbon/human/H = src
+				if(!get_active_held_item())
+					var/grabprob
+					if(dir != turn(get_dir(victim, src), 180))
+						grabprob = 100
+					else
+						grabprob = ((get_stat(STATKEY_LCK) - 10) * 10) + ((get_stat(STATKEY_SPD) - 10) * 10) + ((get_stat(STATKEY_PER) - 10) * 10)
+						if(prob(grabprob))
+							H.dna?.species?.grab(H, victim)
+							visible_message("<span class='danger'>[src] leaps onto [victim]!",\
+								"<span class='danger'>I leap onto [victim]!</span>")
+							return
 		if(hurt)
 			victim.take_bodypart_damage(10,check_armor = TRUE)
 			take_bodypart_damage(10,check_armor = TRUE)
-			if(victim.IsOffBalanced())
-				victim.Knockdown(30)
 			visible_message("<span class='danger'>[src] crashes into [victim]!",\
 				"<span class='danger'>I violently crash into [victim]!</span>")
-		playsound(src,"genblunt",100,TRUE)
+			playsound(src,"genblunt",100,TRUE)
+			var/nomprob
+			if(voremode)
+				nomprob = ((get_stat(STATKEY_LCK - 10) * 10) + ((get_stat(STATKEY_STR) - 10) * 10) + (get_stat(STATKEY_SPD)))
+				if(prob(nomprob))
+					spontaneous_vore_attackby(victim, src)
 
 
 //Throwing stuff
@@ -274,7 +284,8 @@
 		return TRUE
 	if(pulledby && !ignore_grab)
 		if(pulledby != src)
-			return TRUE
+			if(pulledby.grab_state >= GRAB_AGGRESSIVE)
+				return TRUE
 
 /mob/living/carbon/proc/canBeHandcuffed()
 	return 0
@@ -574,7 +585,7 @@
 
 /mob/living/carbon
 	var/nausea = 0
-	var/pain_threshold = 0
+	var/bleeding_tier = 0
 
 /mob/living/carbon/proc/add_nausea(amt)
 	nausea = clamp(nausea + amt, 0, 300)
@@ -633,17 +644,14 @@
 			if(message)
 				visible_message("<span class='danger'>[vomitrelay] throws up all over [parent]!</span>", \
 								"<span class='danger'>I puke all over [parent]!</span>")
-				SEND_SIGNAL(parent, COMSIG_ADD_MOOD_EVENT, "vomitother", /datum/mood_event/vomitother)
 				parent.add_stress(/datum/stressevent/vomitother)
 
-				SEND_SIGNAL(src, COMSIG_ADD_MOOD_EVENT, "vomitedonother", /datum/mood_event/vomitedonother)
 				src.add_stress(/datum/stressevent/vomitedonother)
 			distance = 0
 		else if(is_mouth_covered()) //make this add a blood/vomit overlay later it'll be hilarious
 			if(message)
 				visible_message("<span class='danger'>[src] throws up all over [p_them()]self!</span>", \
 								"<span class='danger'>I puke all over myself!</span>")
-				SEND_SIGNAL(src, COMSIG_ADD_MOOD_EVENT, "vomit", /datum/mood_event/vomitself)
 				if(iscarbon(src))
 					var/mob/living/carbon/C = src
 					C.add_stress(/datum/stressevent/vomitself)
@@ -651,7 +659,6 @@
 		else
 			if(message)
 				visible_message("<span class='danger'>[vomit_source] pukes!</span>", "<span class='danger'>I puke!</span>")
-				SEND_SIGNAL(src, COMSIG_ADD_MOOD_EVENT, "vomit", /datum/mood_event/vomit)
 				if(iscarbon(src))
 					var/mob/living/carbon/C = src
 					C.add_stress(/datum/stressevent/vomit)
@@ -886,9 +893,6 @@
 	protection *= INVERSE(target_zones.len)
 	return protection
 
-/mob/living
-	var/succumb_timer = 0
-
 //this handles hud updates
 /mob/living/carbon/update_damage_hud()
 
@@ -940,21 +944,14 @@
 			overlay_fullscreen("critvision", /atom/movable/screen/fullscreen/crit/vision, visionseverity)
 		else
 			clear_fullscreen("critvision")
-		if(!succumb_timer)
-			succumb_timer = world.time
 		overlay_fullscreen("crit", /atom/movable/screen/fullscreen/crit, severity)
 		overlay_fullscreen("DD", /atom/movable/screen/fullscreen/crit/death)
 		overlay_fullscreen("DDZ", /atom/movable/screen/fullscreen/crit/zeth)
 	else
-		if(succumb_timer)
-			succumb_timer = 0
 		clear_fullscreen("crit")
 		clear_fullscreen("critvision")
 		clear_fullscreen("DD")
 		clear_fullscreen("DDZ")
-	if(hud_used)
-		if(hud_used.stressies)
-			hud_used.stressies.update_icon()
 //	if(blood_volume <= 0)
 //		overlay_fullscreen("DD", /atom/movable/screen/fullscreen/crit/death)
 //	else
@@ -1003,30 +1000,37 @@
 	else
 		clear_fullscreen("brute")*/
 
-	var/hurtdamage = ((get_complex_pain() / (STAWIL * 10)) * 100) //what percent out of 100 to max pain
-	if(hurtdamage > 5) //float
-		var/severity = 0
-		switch(hurtdamage)
-			if(5 to 20)
-				severity = 1
-			if(20 to 40)
-				severity = 2
-			if(40 to 60)
-				severity = 3
-				overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
-			if(60 to 80)
-				severity = 4
-				overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
-			if(80 to 99)
-				severity = 5
-				overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
-			if(99 to INFINITY)
-				severity = 6
-				overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
-		overlay_fullscreen("brute", /atom/movable/screen/fullscreen/brute, severity)
-	else
-		clear_fullscreen("brute")
-		clear_fullscreen("painflash")
+	if(show_redflash())
+		var/hurtdamage = ((get_complex_pain() / (STAWIL * 10)) * 100) //what percent out of 100 to max pain
+		if(hurtdamage > 5) //float
+			var/severity = 0
+			switch(hurtdamage)
+				if(5 to 20)
+					severity = 1
+				if(20 to 40)
+					severity = 2
+				if(40 to 60)
+					severity = 3
+					if(!check_epilepsy())
+						overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
+				if(60 to 80)
+					severity = 4
+					if(!check_epilepsy())
+						overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
+				if(80 to 99)
+					severity = 5
+					if(!check_epilepsy())
+						overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
+				if(99 to INFINITY)
+					severity = 6
+					if(!check_epilepsy())
+						overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
+			
+			if(!check_epilepsy())
+				overlay_fullscreen("brute", /atom/movable/screen/fullscreen/brute, severity)
+		else
+			clear_fullscreen("brute")
+			clear_fullscreen("painflash")
 
 /mob/living/carbon/update_health_hud(shown_health_amount)
 	if(!client || !hud_used)
@@ -1101,16 +1105,14 @@
 //		drop_all_held_items()
 		stop_pulling()
 		throw_alert("handcuffed", /atom/movable/screen/alert/restrained/handcuffed, new_master = src.handcuffed)
-		SEND_SIGNAL(src, COMSIG_ADD_MOOD_EVENT, "handcuffed", /datum/mood_event/handcuffed)
 	else
 		clear_alert("handcuffed")
-		SEND_SIGNAL(src, COMSIG_CLEAR_MOOD_EVENT, "handcuffed")
 	update_action_buttons_icon() //some of our action buttons might be unusable when we're handcuffed.
 	update_inv_handcuffed()
 	update_hud_handcuffed()
 	update_mobility()
 
-/mob/living/carbon/fully_heal(admin_revive = FALSE)
+/mob/living/carbon/fully_heal(admin_revive = FALSE, break_restraints = FALSE)
 	if(reagents)
 		reagents.clear_reagents()
 		for(var/addi in reagents.addiction_list)
@@ -1132,12 +1134,13 @@
 		suiciding = FALSE
 		regenerate_limbs()
 		regenerate_organs()
+		if(reagents)
+			reagents.addiction_list = list()
+	if(break_restraints)
 		handcuffed = initial(handcuffed)
 		for(var/obj/item/restraints/R in contents) //actually remove cuffs from inventory
 			qdel(R)
 		update_handcuffed()
-		if(reagents)
-			reagents.addiction_list = list()
 	cure_all_traumas(TRAUMA_RESILIENCE_MAGIC)
 	..()
 	// heal ears after healing traits, since ears check TRAIT_DEAF trait
@@ -1148,7 +1151,7 @@
 /mob/living/carbon/can_be_revived()
 	. = ..()
 	if(!getorgan(/obj/item/organ/brain) && (!mind))
-		testing("norescarbon")
+
 		return 0
 
 /mob/living/carbon/harvest(mob/living/user)
@@ -1204,16 +1207,6 @@
 			r_arm_index_next += 2
 			O.held_index = r_arm_index_next //2, 4, 6, 8...
 			hand_bodyparts += O
-
-/mob/living/carbon/do_after_coefficent()
-	. = ..()
-	var/datum/component/mood/mood = src.GetComponent(/datum/component/mood) //Currently, only carbons or higher use mood, move this once that changes.
-	if(mood)
-		switch(mood.sanity) //Alters do_after delay based on how sane you are
-			if(-INFINITY to SANITY_DISTURBED)
-				. *= 1.25
-			if(SANITY_NEUTRAL to INFINITY)
-				. *= 0.90
 
 /mob/living/carbon/proc/create_internal_organs()
 	for(var/X in internal_organs)
@@ -1348,10 +1341,6 @@
 		return TRUE
 	if(HAS_TRAIT(src, TRAIT_DUMB))
 		return TRUE
-	var/datum/component/mood/mood = src.GetComponent(/datum/component/mood)
-	if(mood)
-		if(mood.sanity < SANITY_UNSTABLE)
-			return TRUE
 
 /mob/living/carbon/can_speak_vocal()
 	. = ..()

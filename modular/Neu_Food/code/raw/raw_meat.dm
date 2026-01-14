@@ -12,6 +12,23 @@
 	foodtype = MEAT
 	drop_sound = 'sound/foley/dropsound/gen_drop.ogg'
 	cooked_smell = /datum/pollutant/food/fried_meat
+	var/fresh_meat = FALSE
+	become_rot_type = /obj/item/reagent_containers/food/snacks/rogue/meat_rotten
+
+/obj/item/reagent_containers/food/snacks/rogue/meat_rotten
+	eat_effect = /datum/status_effect/debuff/rotfood
+	list_reagents = list(/datum/reagent/consumable/nutriment = SNACK_POOR)
+	name = "rotten meat"
+	desc = "This was edible once... To most it's just a putrid mess now."
+	icon = 'modular/Neu_Food/icons/raw/raw_meat.dmi'
+	icon_state = "meat_rotten"
+
+/obj/item/reagent_containers/food/snacks/rogue/meat_rotten/Initialize()
+	. = ..()
+	src.become_rotten(FALSE, FALSE)
+
+/obj/item/reagent_containers/food/snacks/rogue/meat_rotten/can_craft_with()
+	return TRUE
 
 /obj/item/reagent_containers/food/snacks/rogue/meat/attackby(obj/item/I, mob/living/user)
 	update_cooktime(user)
@@ -185,6 +202,7 @@
 /*	.............   Minced meat & stuffing sausages   ................ */
 /obj/item/reagent_containers/food/snacks/rogue/meat/mince
 	name = "mince"
+	desc = "Meat sliced many times both with and against the grain, producing a fine mince."
 	icon_state = "meatmince"
 	ingredient_size = 2
 	slice_path = null
@@ -294,6 +312,7 @@
 /* ............. Volf Meat ................*/
 /obj/item/reagent_containers/food/snacks/rogue/meat/steak/wolf
 	name = "raw volf meat"
+	desc = "Meat taken from a volf. Stringy, tough, and gamey - but edible."
 	icon_state = "volfstrip"
 	slice_path = /obj/item/reagent_containers/food/snacks/rogue/meat/mince/beef		//Honestly, we don't need our own minced type on this one.
 	fried_type = /obj/item/reagent_containers/food/snacks/rogue/meat/steak/wolf/fried

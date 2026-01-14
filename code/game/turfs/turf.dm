@@ -143,9 +143,6 @@
 	flags_1 &= ~INITIALIZED_1
 	..()
 
-#define SEE_SKY_YES 1
-#define SEE_SKY_NO 2
-
 /turf
 	var/can_see_sky //1, 2
 	var/primary_area
@@ -313,6 +310,9 @@
 	var/mov_name = A.name
 	for(var/i in contents)
 		var/atom/thing = i
+		if(isliving(thing) && isliving(A) && A != thing)
+			var/mob/living/livingA = A
+			livingA.spontaneous_vore_attackby(thing, livingA)
 		flags |= thing.intercept_zImpact(A, levels)
 		if(flags & FALL_STOP_INTERCEPTING)
 			break
@@ -675,4 +675,3 @@
 //Should return new turf
 /turf/proc/Melt()
 	return ScrapeAway(flags = CHANGETURF_INHERIT_AIR)
-

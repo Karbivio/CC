@@ -37,7 +37,7 @@
 	..()
 	to_chat(H, span_warning("You are a Doppelsoldner - \"Double-pay Mercenary\" - an experienced frontline swordsman trained by the Zenitstadt fencing guild."))
 	backl = /obj/item/rogueweapon/scabbard/gwstrap
-	armor = /obj/item/clothing/suit/roguetown/armor/plate/blacksteel_half_plate
+	armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/blacksteel
 	if(H.mind)
 		var/weapons = list("Zweihander", "Kriegmesser & Buckler")
 		var/weapon_choice = input(H, "Choose your weapon.", "TAKE UP ARMS") as anything in weapons
@@ -99,7 +99,7 @@
 	..()
 	to_chat(H, span_warning("You're an experienced soldier skilled in the use of polearms and axes. Your equals make up the bulk of the mercenary guild's forces."))
 	backl = /obj/item/rogueweapon/scabbard/gwstrap
-	armor = /obj/item/clothing/suit/roguetown/armor/plate/blacksteel_half_plate
+	armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/blacksteel
 	if(H.mind)
 		var/weapons = list("Halberd", "Partizan")
 		var/weapon_choice = input(H, "Choose your weapon.", "TAKE UP ARMS") as anything in weapons
@@ -195,7 +195,7 @@
 	name = "Armbrustschutze"
 	tutorial = "You're a proved marksman with a crossbow, and learned how to set up camp and defenses in the wild. The guild needs you."
 	outfit = /datum/outfit/job/roguetown/mercenary/grenzelhoft_crossbowman
-	traits_applied = list(TRAIT_DODGEEXPERT, TRAIT_STEELHEARTED)
+	traits_applied = list(TRAIT_STEELHEARTED)
 	subclass_stats = list(
 		STATKEY_SPD = 2,
 		STATKEY_WIL = 2,
@@ -274,8 +274,11 @@
 		STATKEY_PER = 3,
 		STATKEY_SPD = 1
 	)
+	extra_context = "This class gains T3 spells at Old age."
+	age_mod = /datum/class_age_mod/grenzel_mage
 	subclass_skills = list(
 		/datum/skill/magic/arcane = SKILL_LEVEL_JOURNEYMAN,
+		/datum/skill/combat/staves = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/combat/polearms = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/combat/wrestling = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/combat/unarmed = SKILL_LEVEL_APPRENTICE,
@@ -295,7 +298,7 @@
 	to_chat(H, span_warning("You are a Gefechtgelehrter - \"Combat Scholar\" - A proud magos from the Celestial Academy of Magos, who's skills in Siege Magic and Arcyne Physics are unmatched."))
 	belt = /obj/item/storage/belt/rogue/leather/battleskirt
 	backl = /obj/item/rogueweapon/woodstaff/emerald/blacksteelstaff
-	cloak = /obj/item/clothing/cloak/stabard/grenzelmage
+	cloak = /obj/item/clothing/cloak/tabard/stabard/grenzelmage
 	armor = /obj/item/clothing/suit/roguetown/armor/brigandine/light
 	//General gear regardless of class.
 	wrists = /obj/item/clothing/wrists/roguetown/bracers
@@ -326,13 +329,6 @@
 		H.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/counterspell)
 		H.mind?.adjust_spellpoints(3)
 	if(H.age == AGE_OLD) // FEAR the old man in a profession where men die young, or something corny like that.
-		H.adjust_skillrank_up_to(/datum/skill/magic/arcane, 5, TRUE)
-		H.change_stat(STATKEY_SPD, -1)
-		H.change_stat(STATKEY_STR, -1)
-		H.change_stat(STATKEY_CON, -2)
-		H.change_stat(STATKEY_PER, 2)
-		H.change_stat(STATKEY_INT, 2)
-		H.mind?.adjust_spellpoints(3)
 		ADD_TRAIT(H, TRAIT_ARCYNE_T3, TRAIT_GENERIC)
 	else
 		ADD_TRAIT(H, TRAIT_ARCYNE_T2, TRAIT_GENERIC) // Only T2 arcyne (Unless they're old) so if they get spell points from something they can only pick from the curated spellblade list
@@ -372,7 +368,7 @@
 /datum/outfit/job/roguetown/mercenary/grenzelhoft_arquebusier/pre_equip(mob/living/carbon/human/H)
 	..()
 	to_chat(H, span_warning("You are a former veteran arbalest, outfitted with the latest technologies known to man. Your weapons remain as deadly to the enemy as to you, but your training should overcome it. Run them down, with fire and sword."))
-	beltr = /obj/item/powderflask
+	beltr = /obj/item/rogueweapon/stoneaxe/woodcut/steel
 	beltl = /obj/item/quiver/bulletpouch/iron
 	r_hand = /obj/item/gun/ballistic/arquebus
 	if(H.mind)
@@ -398,6 +394,7 @@
 		/obj/item/storage/belt/rogue/pouch/coins/poor = 1,
 		/obj/item/flashlight/flare/torch = 1,
 		/obj/item/rogueweapon/huntingknife = 1,
-		/obj/item/rogueweapon/scabbard/sheath = 1
+		/obj/item/rogueweapon/scabbard/sheath = 1,
+		/obj/item/powderflask = 1
 		)
 	H.merctype = 7

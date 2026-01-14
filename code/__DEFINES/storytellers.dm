@@ -106,9 +106,9 @@
 
 #define MUNDANE_MIN_POP 4
 #define MODERATE_MIN_POP 6
-#define MAJOR_MIN_POP 20
-#define CHARACTER_INJECTION_MIN_POP 20
-#define OBJECTIVES_MIN_POP 20
+#define MAJOR_MIN_POP 8
+#define CHARACTER_INJECTION_MIN_POP 12
+#define OBJECTIVES_MIN_POP 15
 
 /// Defines for how much pop do we need to stop applying a pop scalling penalty to event frequency.
 #define MUNDANE_POP_SCALE_THRESHOLD 25
@@ -132,8 +132,8 @@
 #define EVENT_PANEL_TRACKS list(EVENT_TRACK_MUNDANE, EVENT_TRACK_PERSONAL, EVENT_TRACK_MODERATE, EVENT_TRACK_INTERVENTION, EVENT_TRACK_CHARACTER_INJECTION, EVENT_TRACK_OMENS, EVENT_TRACK_RAIDS, UNCATEGORIZED_EVENTS, ALL_EVENTS)
 
 /// Defines for the antag cap to prevent midround injections.
-#define ANTAG_CAP_FLAT 3
-#define ANTAG_CAP_DENOMINATOR 30
+#define ANTAG_CAP_FLAT 2
+#define ANTAG_CAP_DENOMINATOR 20
 
 ///Below are defines for roundstart point pool. The GAIN ones are multiplied by ready population
 #define ROUNDSTART_MUNDANE_BASE 20

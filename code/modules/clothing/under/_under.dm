@@ -21,6 +21,7 @@
 	var/mutantrace_variation = NO_MUTANTRACE_VARIATION //Are there special sprites for specific situations? Don't use this unless you need to.
 	var/freshly_laundered = FALSE
 	bloody_icon_state = "bodyblood"
+	sellprice = 4
 
 	grid_width = 64
 	grid_height = 64
@@ -78,7 +79,6 @@
 
 	if(slot == SLOT_PANTS && freshly_laundered)
 		freshly_laundered = FALSE
-		SEND_SIGNAL(user, COMSIG_ADD_MOOD_EVENT, "fresh_laundry", /datum/mood_event/fresh_laundry)
 
 	if(attached_accessory && slot != SLOT_HANDS && ishuman(user))
 		var/mob/living/carbon/human/H = user

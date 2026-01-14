@@ -26,7 +26,7 @@
 /datum/patron/inhumen/baotha/can_pray(mob/living/follower)
 	. = ..()
 	// Allows prayer in the Zzzzzzzurch(!)
-	if(istype(get_area(follower), /area/rogue/indoors/shelter/mountains))
+	if(istype(get_area(follower), /area/rogue/under/cave/inhumen))
 		return TRUE
 	// Allows prayer near EEEVIL psycross
 	for(var/obj/structure/fluff/psycross/zizocross/cross in view(4, get_turf(follower)))
@@ -57,8 +57,10 @@
     message_out,
     message_self,
     conditional_buff,
-    situational_bonus
+    situational_bonus,
+	is_inhumen
 )
+	*is_inhumen = TRUE
 	*message_out = span_info("Hedonistic impulses and emotions throb all about from [target].")
 	*message_self = span_notice("An intoxicating rush of narcotic delight soothes my suffering!")
 

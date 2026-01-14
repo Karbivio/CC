@@ -16,11 +16,12 @@
 	(+1 Stat of their choice, or Lack of Hunger & Thirst)"
 
 	skin_tone_wording = "Craft"
+	max_age = "???"
 
 	species_traits = list(EYECOLOR,HAIR,FACEHAIR,LIPS,STUBBLE,OLDGREY)
 	inherent_traits = list(TRAIT_NOMOBSWAP)
 	default_features = MANDATORY_FEATURE_LIST
-	use_skintones = 1
+	use_skintones = TRUE
 	disliked_food = NONE
 	liked_food = NONE
 	possible_ages = ALL_AGES_LIST
@@ -117,6 +118,12 @@
 		"Olympia" = SKIN_COLOR_OLYMPIA,
 		"Necral" = SKIN_COLOR_NECRAL,
 		"Abyssal" = SKIN_COLOR_ABYSSAL,
+		//Caustic edit
+		"Ruinous" = SKIN_COLOR_RUINOUS,
+		"Godshadowed" = SKIN_COLOR_GODSHADOWED,
+		"Rememberance" = SKIN_COLOR_REMEMBERANCE,
+		"Contemplative" = SKIN_COLOR_CONTEMPLATIVE
+		//Caustic edit end
 	)
 
 /datum/species/aasimar/get_hairc_list()

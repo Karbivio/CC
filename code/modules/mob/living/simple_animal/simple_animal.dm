@@ -137,7 +137,7 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 
 	///If the creature has, and can use, hands.
 	var/dextrous = FALSE
-	var/dextrous_hud_type = /datum/hud/dextrous
+	var/dextrous_hud_type = /datum/hud/human
 
 	///The Status of our AI, can be set to AI_ON (On, usual processing), AI_IDLE (Will not process, but will return to AI_ON if an enemy comes near), NPC_AI_OFF (Off, Not processing ever), AI_Z_OFF (Temporarily off due to nonpresence of players).
 	var/AIStatus = AI_ON
@@ -186,6 +186,8 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 	///our current cell grid
 	var/datum/cell_tracker/our_cells
 
+	var/obj/item/caparison/ccaparison
+
 /mob/living/simple_animal/Initialize()
 	. = ..()
 	GLOB.simple_animals[AIStatus] += src
@@ -217,11 +219,24 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 		QDEL_NULL(ssaddle)
 		ssaddle = null
 
+	if(ccaparison)
+		QDEL_NULL(ccaparison)
+		ccaparison = null
+
 	var/turf/T = get_turf(src)
 	if (T && AIStatus == AI_Z_OFF)
 		SSidlenpcpool.idle_mobs_by_zlevel[T.z] -= src
 
 	return ..()
+
+/mob/living/simple_animal/examine(mob/user)
+	. = ..()
+	if(tame)
+		. += span_notice("This animal appears to be tamed.")
+	if(ssaddle)
+		. += span_notice("This animal is saddled: ([ssaddle.name]).")
+	if(ccaparison)
+		. += span_notice("This animal is wearing a caparison: ([ccaparison.name]).")
 
 /mob/living/simple_animal/attackby(obj/item/O, mob/user, params)
 	if(!is_type_in_list(O, food_type))
@@ -243,6 +258,41 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 				else
 					tame_chance += bonus_tame_chance
 
+/mob/living/simple_animal/attack_right(mob/user, params)
+	if(ccaparison)
+		user.visible_message(span_notice("[user] is removing the caparison from [src]..."), span_notice("I start removing the caparison from [src]..."))
+		if(!do_after(user, 10 SECONDS, TRUE, src))
+			return
+		playsound(loc, 'sound/foley/saddledismount.ogg', 100, FALSE)
+		user.visible_message(span_notice("[user] removes the caparison from [src]."), span_notice("I remove the caparison from [src]."))
+		var/obj/item/caparison/C = ccaparison
+		ccaparison = null
+		C.forceMove(get_turf(src))
+		user.put_in_hands(C)
+		update_icon()
+		return
+	else if(ssaddle)
+		user.visible_message(span_notice("[user] is removing the saddle from [src]..."), span_notice("I start removing the saddle from [src]..."))
+		if(!do_after(user, 5 SECONDS, TRUE, src))
+			return
+		playsound(loc, 'sound/foley/saddledismount.ogg', 100, FALSE)
+		user.visible_message(span_notice("[user] removes the saddle from [src]."), span_notice("I remove the saddle from [src]."))
+		var/obj/item/natural/saddle/S = ssaddle
+		ssaddle = null
+		S.forceMove(get_turf(src))
+		user.put_in_hands(S)
+		update_icon()
+		return
+	return ..()
+
+/mob/living/simple_animal/update_icon()
+	cut_overlays()
+	. = ..()
+	if(ccaparison && stat == CONSCIOUS && !resting)
+		var/caparison_overlay = ccaparison.female_caparison_state && gender == FEMALE ? ccaparison.female_caparison_state : ccaparison.caparison_state
+		var/mutable_appearance/caparison_above_overlay = mutable_appearance(icon, caparison_overlay + "-above", 4.31)
+		add_overlay(caparison_overlay)
+		add_overlay(caparison_above_overlay)
 
 ///Extra effects to add when the mob is tamed, such as adding a riding component
 /mob/living/simple_animal/proc/tamed(mob/user)
@@ -252,7 +302,6 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 	if(user)
 		owner = user
 		SEND_SIGNAL(user, COMSIG_ANIMAL_TAMED, src)
-	return
 
 //mob/living/simple_animal/examine(mob/user)
 //	. = ..()
@@ -403,11 +452,11 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 	if(stat == DEAD)
 		var/obj/item/held_item = user.get_active_held_item()
 		if(held_item)
-			if((butcher_results || guaranteed_butcher_results) && held_item.get_sharpness() && held_item.wlength == WLENGTH_SHORT)
+			if((butcher_results || guaranteed_butcher_results) && ((held_item.get_sharpness() && held_item.wlength == WLENGTH_SHORT) || istype(held_item, /obj/item/contraption/shears)))
 				var/used_time = 3 SECONDS
 				var/on_meathook = FALSE
-				if(src.buckled && istype(src.buckled, /obj/structure/meathook))
-					on_meathook = TRUE
+				if((src.buckled && istype(src.buckled, /obj/structure/meathook))|| istype(held_item, /obj/item/contraption/shears))
+					on_meathook = TRUE //will work efficiently if they are using autosheers as well
 					used_time -= 3 SECONDS
 					visible_message("[user] begins to efficiently butcher [src]...")
 				else
@@ -424,6 +473,8 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 		if (do_after(user, access_time, target = src))
 			saddle_storage.show_to(user)
 	..()
+
+// Caustic Edit - Keeping most of it the same, just changing how it handles failed butchers and spawn a gib on a neighboring tile instead of just exploding at the end.
 
 /mob/living/simple_animal/proc/butcher(mob/living/user, on_meathook = FALSE)
 	if(ssaddle)
@@ -461,6 +512,9 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 	var/perfect_count = 0
 	var/normal_count = 0
 
+	var/list/dna_to_add // Copied over from the gibspawner.dm and trimmed down, so that gibs have a bloodtype? If it matters?
+	dna_to_add = list("Non-human DNA" = random_blood_type())
+
 	for(var/path in butcher_results)
 		var/amount = butcher_results[path]
 		if(!do_after(user, time_per_cut, target = src))
@@ -472,6 +526,7 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 
 		// Check for botch first
 		if(prob(botch_chance))
+			botched_gib(dna_to_add)
 			botch_count++
 			if(length(botched_butcher_results) && (path in botched_butcher_results))
 				amount = botched_butcher_results[path]
@@ -492,16 +547,66 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 		for(var/j in 1 to amount)
 			var/obj/item/I = new path(Tsec)
 			I.add_mob_blood(src)
-			if(rotstuff && istype(I,/obj/item/reagent_containers/food/snacks))
-				var/obj/item/reagent_containers/food/snacks/F = I
-				F.become_rotten()
+			if(istype(I,/obj/item/reagent_containers/food/snacks))
+				I.item_flags |= FRESH_FOOD_ITEM
+				if(rotstuff)
+					var/obj/item/reagent_containers/food/snacks/F = I
+					F.become_rotten()
 
 		if(user.mind)
 			user.mind.add_sleep_experience(/datum/skill/labor/butchering, user.STAINT * 0.5)
 		playsound(src, 'sound/foley/gross.ogg', 100, FALSE)
 	if(isemptylist(butcher_results))
 		to_chat(user, "<span class='notice'>I finish butchering: [butcher_summary(botch_count, normal_count, perfect_count, botch_chance, perfect_chance)].</span>")
-		gib()
+		clean_gib(dna_to_add)
+
+// This will choose a random adjacent tile to spawn a gib on, and then edit it's offset accordingly so it's closer to the body
+/mob/living/simple_animal/proc/botched_gib(list/dna_to_add)
+	var/dir = pick(list(WEST, EAST, SOUTH, NORTH))
+
+	var/gibType = /obj/effect/decal/cleanable/blood/gibs
+	var/obj/effect/decal/cleanable/blood/gibs/gib = new gibType(src.loc)
+	gib.add_blood_DNA(dna_to_add)
+
+	if (step_to(gib, get_step(gib, dir), 0))
+		if (dir == NORTH)
+			gib.pixel_y = -11
+		if (dir == SOUTH)
+			gib.pixel_y = 11
+		if (dir == EAST)
+			gib.pixel_x = -11
+		if (dir == WEST)
+			gib.pixel_x = 11
+		gib.pixel_x += rand(-2,2)
+		gib.pixel_y += rand(-2,2)
+	else
+		if (dir == NORTH)
+			gib.pixel_y = 8
+		if (dir == SOUTH)
+			gib.pixel_y = -8
+		if (dir == EAST)
+			gib.pixel_x = 8
+		if (dir == WEST)
+			gib.pixel_x = -8
+		gib.pixel_x += rand(-2,2)
+		gib.pixel_y += rand(-2,2)
+
+// This proc is entirely new for the changes to butchery
+/mob/living/simple_animal/proc/clean_gib(list/dna_to_add)
+	if(stat != DEAD)
+		death(TRUE)
+	if(client)
+		SSdroning.kill_droning(client)
+	playsound(src.loc, pick('sound/combat/gib (1).ogg','sound/combat/gib (2).ogg'), 40, FALSE, 2)
+
+	spill_embedded_objects()
+
+	var/gibType = /obj/effect/decal/cleanable/blood/gibs/core
+	var/obj/effect/decal/cleanable/blood/gibs/gib = new gibType(src.loc)
+	gib.add_blood_DNA(dna_to_add)
+	qdel(src)
+
+// Caustic Edit End
 
 /mob/living/proc/butcher_summary(botch_count, normal_count, perfect_count, botch_chance, perfect_chance)
     var/list/parts = list()
@@ -578,6 +683,7 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 			transform = transform.Turn(180)
 		density = FALSE
 		..()
+	update_icon()
 
 /mob/living/simple_animal/proc/CanAttack(atom/the_target)
 	if(binded)
@@ -637,20 +743,11 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 				continue
 			else if(!istype(M, childtype) && M.gender == MALE && !(M.flags_1 & HOLOGRAM_1)) //Better safe than sorry ;_;
 				partner = M
-				testing("[src] foudnpartner [M]")
-
-//		else if(isliving(M) && !faction_check_mob(M)) //shyness check. we're not shy in front of things that share a faction with us.
-//			testing("[src] wenotalon [M]")
-//			return //we never mate when not alone, so just abort early
-
 	if(alone && partner && children < 3)
 		var/childspawn = pickweight(childtype)
 		var/turf/target = get_turf(loc)
 		if(target)
 			return new childspawn(target)
-//			visible_message(span_warning("[src] finally gives birth."))
-//			playsound(src, 'sound/foley/gross.ogg', 100, FALSE)
-//			breedchildren--
 
 /mob/living/simple_animal/canUseTopic(atom/movable/M, be_close=FALSE, no_dexterity=FALSE, no_tk=FALSE)
 	if(incapacitated())
@@ -819,7 +916,7 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 /mob/living/simple_animal/hostile/user_buckle_mob(mob/living/M, mob/user)
 	if(user != M)
 		return
-	var/datum/component/riding/riding_datum = GetComponent(/datum/component/riding)
+	var/datum/component/riding/riding_datum = GetComponent(/datum/component/riding/no_ocean)
 	if(riding_datum)
 		var/time2mount = 12
 		riding_datum.vehicle_move_delay = move_to_delay
@@ -851,7 +948,7 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 	if (stat == DEAD)
 		return
 	var/oldloc = loc
-	var/datum/component/riding/riding_datum = GetComponent(/datum/component/riding)
+	var/datum/component/riding/riding_datum = GetComponent(/datum/component/riding/no_ocean)
 	if(tame && riding_datum)
 		if(riding_datum.handle_ride(user, direction))
 			riding_datum.vehicle_move_delay = move_to_delay
@@ -914,11 +1011,14 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 		else
 			stack_trace("Something attempted to set simple animals AI to an invalid state: [togglestatus]")
 
-/mob/living/simple_animal/process(delta_time)
-	pass()
-
 /mob/living/simple_animal/proc/consider_wakeup()
-	pass()
+	for(var/datum/spatial_grid_cell/grid as anything in our_cells.member_cells)
+		if(length(grid.client_contents))
+			toggle_ai(AI_ON)
+			return TRUE
+
+	toggle_ai(AI_OFF)
+	return FALSE
 
 /mob/living/simple_animal/adjustHealth(amount, updating_health = TRUE, forced = FALSE)
 	. = ..()
@@ -948,6 +1048,8 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 		food = max(food + 30, 100)
 
 /mob/living/simple_animal/Life()
+	if(!client && can_have_ai && (AIStatus == AI_Z_OFF || AIStatus == AI_OFF))
+		return
 	. = ..()
 	if(.)
 		if(food > 0)
@@ -1007,3 +1109,5 @@ GLOBAL_VAR_INIT(farm_animals, FALSE)
 		RegisterSignal(new_grid, SPATIAL_GRID_CELL_ENTERED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS), PROC_REF(on_client_enter))
 		RegisterSignal(new_grid, SPATIAL_GRID_CELL_EXITED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS), PROC_REF(on_client_exit))
 	consider_wakeup()
+
+#undef MAX_FARM_ANIMALS

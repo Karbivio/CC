@@ -12,6 +12,9 @@ GLOBAL_LIST_INIT(highwayman_aggro, world.file2list("strings/rt/highwaymanaggroli
 	possible_rmb_intents = list()
 	var/is_silent = FALSE /// Determines whether or not we will scream our funny lines at people.
 
+	//We're slightly smarter bandits than the peasant militia. 
+	smart_combatant = TRUE
+
 
 /mob/living/carbon/human/species/human/northern/highwayman/ambush
 	aggressive=1
@@ -26,7 +29,7 @@ GLOBAL_LIST_INIT(highwayman_aggro, world.file2list("strings/rt/highwaymanaggroli
 		wander = TRUE
 		if(!is_silent && target != newtarg)
 			say(pick(GLOB.highwayman_aggro))
-			linepoint(target)
+			pointed(target)
 
 /mob/living/carbon/human/species/human/northern/highwayman/should_target(mob/living/L)
 	if(L.stat != CONSCIOUS)
@@ -109,7 +112,7 @@ GLOBAL_LIST_INIT(highwayman_aggro, world.file2list("strings/rt/highwaymanaggroli
 		r_hand = /obj/item/rogueweapon/sword/falchion/militia
 	if(prob(20))
 		r_hand = /obj/item/rogueweapon/pick/militia
-	if(prob(25))	
+	if(prob(25))
 		l_hand = /obj/item/rogueweapon/shield/wood
 	if(prob(10))
 		l_hand = /obj/item/rogueweapon/shield/buckler/palloy

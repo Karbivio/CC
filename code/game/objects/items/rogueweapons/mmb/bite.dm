@@ -12,6 +12,9 @@
 
 /datum/intent/bite/on_mmb(atom/target, mob/living/user, params)
 	var/datum/species/dullahan/user_species
+	if(user.stat == DEAD || user.stat == UNCONSCIOUS || user.stat == SOFT_CRIT)
+		to_chat(user, span_warning("I cannot move my jaw."))
+		return
 	if(isdullahan(user) && ishuman(target))
 		var/mob/living/carbon/human/target_human = target
 		var/mob/living/carbon/human/user_human = user
@@ -29,8 +32,9 @@
 	if(user.incapacitated())
 		return
 	if(!get_location_accessible(user, BODY_ZONE_PRECISE_MOUTH, grabs="other"))
-		to_chat(user, span_warning("My mouth is blocked."))
-		return
+		if(!HAS_TRAIT(user, TRAIT_BITERHELM))
+			to_chat(user, span_warning("My mouth is blocked."))
+			return
 	if(HAS_TRAIT(user, TRAIT_NO_BITE))
 		to_chat(user, span_warning("I can't bite."))
 		return
@@ -87,8 +91,12 @@
 		var/armor_block = run_armor_check(user.zone_selected, "stab",blade_dulling=BCLASS_BITE)
 		if(!apply_damage(dam2do, BRUTE, def_zone, armor_block, user))
 			nodmg = TRUE
-			next_attack_msg += span_warning("Armor stops the damage.")
-
+			next_attack_msg += VISMSG_ARMOR_BLOCKED
+		else if(!nodmg && (HAS_TRAIT(user, TRAIT_VAMPBITE)))
+			var/ramount = 15
+			var/rid = /datum/reagent/vampsolution
+			reagents.add_reagent(rid, ramount)
+			rid = /datum/reagent/vampsolution
 	var/datum/wound/caused_wound
 	if(!nodmg)
 		caused_wound = affecting.bodypart_attacked_by(BCLASS_BITE, dam2do, user, user.zone_selected, crit_message = TRUE)
@@ -270,7 +278,7 @@
 							playsound(C.loc, 'sound/combat/fracture/headcrush (2).ogg', 100, FALSE, -1)
 							return*/
 	else
-		C.next_attack_msg += " <span class='warning'>Armor stops the damage.</span>"
+		C.next_attack_msg += VISMSG_ARMOR_BLOCKED
 	C.visible_message(span_danger("[user] bites [C]'s [parse_zone(sublimb_grabbed)]![C.next_attack_msg.Join()]"), \
 					span_userdanger("[user] bites my [parse_zone(sublimb_grabbed)]![C.next_attack_msg.Join()]"), span_hear("I hear a sickening sound of chewing!"), COMBAT_MESSAGE_RANGE, user)
 	to_chat(user, span_danger("I bite [C]'s [parse_zone(sublimb_grabbed)].[C.next_attack_msg.Join()]"))

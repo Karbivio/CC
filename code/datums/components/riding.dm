@@ -1,7 +1,7 @@
 /datum/component/riding
 	var/last_vehicle_move = 0 //used for move delays
 	var/last_move_diagonal = FALSE
-	var/vehicle_move_delay = 2 //tick delay between movements, lower = faster, higher = slower
+	var/vehicle_move_delay = 4 //tick delay between movements, lower = faster, higher = slower
 	var/keytype
 
 	var/slowed = FALSE
@@ -19,6 +19,10 @@
 	var/ride_check_ridden_incapacitated = FALSE
 
 	var/del_on_unbuckle_all = FALSE
+
+/datum/component/riding/no_ocean/Initialize()//no copy paste
+	. = ..()
+	forbid_turf_typecache = typecacheof(/turf/open/water/ocean/deep)
 
 /datum/component/riding/Initialize()
 	if(!ismovableatom(parent))
@@ -254,11 +258,14 @@
 		AM.layer = MOB_LAYER
 
 /datum/component/riding/human/get_offsets(pass_index)
-	var/mob/living/carbon/human/H = parent
-	if(H.buckle_lying)
+	var/mob/living/carbon/human/human = parent
+	var/obj/item/bodypart/taur/taur = human.get_taur_tail()
+	if(human.buckle_lying)
 		return list(TEXT_NORTH = list(0, 6), TEXT_SOUTH = list(0, 6), TEXT_EAST = list(0, 6), TEXT_WEST = list(0, 6))
 	else if(istype(parent, /mob/living/carbon/human/species/wildshape)) //Snowflake druid travel
 		return list(TEXT_NORTH = list(8, 6), TEXT_SOUTH = list(8, 6), TEXT_EAST = list(8, 6), TEXT_WEST = list(8, 6))
+	else if(taur)
+		return list(TEXT_NORTH = list(0, 6), TEXT_SOUTH = list(0, 6), TEXT_EAST = list(-12, 4), TEXT_WEST = list(12, 4))
 	else
 		return list(TEXT_NORTH = list(0, 6), TEXT_SOUTH = list(0, 6), TEXT_EAST = list(-6, 4), TEXT_WEST = list(6, 4))
 

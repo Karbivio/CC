@@ -19,17 +19,19 @@
 
 
 /mob/proc/flash_fullscreen(state)
+	///Caustic edit, screen epilepsy thing
 	var/atom/movable/screen/fullscreen/flashholder/screen = screens["flashholder"]
+	if(!check_epilepsy()) //This is the only new line added, the rest of the changes are simply indenting the rest of this thing by one 
 
-	if(!screen)
-		screen = new /atom/movable/screen/fullscreen/flashholder()
-		screens["flashholder"] = screen
+		if(!screen)
+			screen = new /atom/movable/screen/fullscreen/flashholder()
+			screens["flashholder"] = screen
 
-	if(client && screen.should_show_to(src))
-		screen.update_for_view(client.view)
-		client.screen += screen
+		if(client && screen.should_show_to(src))
+			screen.update_for_view(client.view)
+			client.screen += screen
 
-	flick(state,screen)
+		flick(state,screen)
 	return screen
 
 
@@ -144,15 +146,14 @@
 	nomouseover = FALSE
 
 /atom/movable/screen/fullscreen/crit/zeth/Click()
-	if(isliving(usr))
-		var/mob/living/L = usr
-		if(L.stat != DEAD)
-			if(alert("Are you done living?", "", "Yes", "No") == "Yes")
-				if(!L.succumb_timer || (world.time < L.succumb_timer + 111 SECONDS) )
-					var/ttime =  round(((L.succumb_timer + 111 SECONDS) - world.time) / 10)
-					to_chat(L, span_redtext("I'm not dead enough yet. [ttime]"))
-				else
-					L.succumb(reaper = TRUE)
+	if(!isliving(usr))
+		return
+	var/mob/living/L = usr
+	if(L.stat == DEAD)
+		return
+	if(alert("Are you done living?", "", "Yes", "No") == "No")
+		return
+	L.succumb(reaper = TRUE)
 
 /atom/movable/screen/fullscreen/crit/death
 	icon_state = "DD"
@@ -184,6 +185,11 @@
 
 /atom/movable/screen/fullscreen/zezuspsyst
 	icon_state = "hey"
+	layer = CRIT_LAYER
+	plane = FULLSCREEN_PLANE
+
+/atom/movable/screen/fullscreen/zezuspsyst_subtle
+	icon_state = "hey_but_way_more_subtle"
 	layer = CRIT_LAYER
 	plane = FULLSCREEN_PLANE
 

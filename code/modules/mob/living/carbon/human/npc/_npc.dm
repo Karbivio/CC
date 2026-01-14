@@ -1,3 +1,5 @@
+#define ATTACKS_UNTIL_SWITCHING_UP 3 // How many attack a NPC will use on the same place before switching it up
+
 /mob/living/carbon/human
 	var/aggressive=0 //0= retaliate only
 	var/frustration=0
@@ -46,6 +48,29 @@
 	/// When above this amount of stamina (Stamina is stamina damage), the NPC will not attempt to jump.
 	var/npc_max_jump_stamina = 50
 
+	/// Attack Selection
+	var/attack_on_zone = 1
+
+	///What distance should we be checking for interesting things when considering idling/deidling? Defaults to AI_DEFAULT_INTERESTING_DIST
+	var/interesting_dist = AI_DEFAULT_INTERESTING_DIST
+	///our current cell grid
+	var/datum/cell_tracker/our_cells
+
+	//If we utilize special attacks or not; All is handled within do_best_melee_attack() chain.
+	var/special_attacker = FALSE
+
+	//If we utilize our intents further outside of strong intent.
+	var/smart_combatant = FALSE
+
+/mob/living/carbon/human/Initialize()
+	. = ..()
+	our_cells = new(interesting_dist, interesting_dist, 1)
+	set_new_cells()
+
+/mob/living/carbon/human/Destroy()
+	our_cells = null
+	return ..()
+
 /mob/living/carbon/human/proc/IsStandingStill()
 	return doing || resisting || pickpocketing
 
@@ -74,25 +99,7 @@
 		return TRUE
 	return FALSE
 
-// Check if a player is in range of the AI
-// TODO: Note, we can nuke this once we put complex on spatial grid sleeping
-/mob/living/carbon/human/proc/scan_for_player_in_range(pawn_x, pawn_y, pawn_z)
-	for(var/i = GLOB.player_list.len; i > 0; i--)
-		var/mob/living/M = GLOB.player_list[i]
-		if(!istype(M))
-			continue
-		if(M.z != z) // not the same z sector
-			if(abs(M.y - pawn_y) > 6 || abs(M.x - pawn_x) > 6)
-				continue
-		else if(abs(M.y - pawn_y) > 14 || abs(M.x - pawn_x) > 14)
-			continue
-		return TRUE
-	return FALSE
-
 /mob/living/carbon/human/proc/process_ai()
-	// Prevent expensive pathing if it is in idle mode and there's no players
-	if((mode == NPC_AI_IDLE || mode == NPC_AI_OFF) && !scan_for_player_in_range(x, y, z))
-		return FALSE
 	if(IsDeadOrIncap())
 		walk_to(src,0)
 		return stat == DEAD // only stop processing if we're dead-dead
@@ -791,6 +798,15 @@
 	Weapon = get_active_held_item()
 	OffWeapon = get_inactive_held_item()
 
+	//Feint Riposte check before we do any further attacks to teach our enemy a lesson.
+	if(smart_combatant && istype(Weapon, /obj/item/rogueweapon)) //Make sure we have a proper weapon in hand. No feinting with a stick or some shit.
+		if(!has_status_effect(/datum/status_effect/debuff/feintcd) && target.has_status_effect(/datum/status_effect/buff/clash))
+			if(possible_rmb_intents & /datum/rmb_intent/feint)
+				swap_rmb_intent(/datum/rmb_intent/feint)
+				if(Adjacent(target))
+					try_special_attack(target)
+					return TRUE //Attempt to feint and ruin their clash...
+
 	// What is the chance we try to grab with our offhand?
 	var/make_grab_chance = Weapon ? 5 : 20 // If unarmed, 20% chance; otherwise 5%
 	var/use_grab_chance = 30 // 30% chance to use a grab if we already have one
@@ -820,7 +836,46 @@
 			// todo: decide to drop the offhand maybe?
 			if(!OffWeapon) // wield it!
 				Weapon.attack_self(src)
-		rog_intent_change(1)
+
+		//Lets spice things up.
+		var/did_we_change_intent = FALSE
+		if(istype(Weapon, /obj/item/rogueweapon))
+			var/obj/item/rogueweapon/actual_weapon = Weapon
+			var/weapon_intents = actual_weapon.possible_item_intents
+			var/weapon_special_intents = actual_weapon.special
+			
+			if(length(weapon_intents) > 1 && !has_status_effect(/datum/status_effect/debuff/swapped_intent_npc))
+				did_we_change_intent = TRUE
+				rog_intent_change(rand(1, length(weapon_intents))) 
+				apply_status_effect(/datum/status_effect/debuff/swapped_intent_npc) //45 seconds before we swap to a new weapon intent entirely.
+
+			if(special_attacker && prob(50) && !has_status_effect(/datum/status_effect/debuff/specialcd)) //Only if we use specials...
+				if(weapon_special_intents)
+					if(possible_rmb_intents & /datum/rmb_intent/strong)
+						swap_rmb_intent(/datum/rmb_intent/strong)
+						try_special_attack(target)
+						return TRUE //We used our special intent on the target as soon as we could.
+
+			if(smart_combatant && prob(50)) // Only if we use rmb intents...
+				if(possible_rmb_intents)
+					if(!has_status_effect(/datum/status_effect/debuff/feintcd))
+						if(possible_rmb_intents & /datum/rmb_intent/feint && rmb_intent != /datum/rmb_intent/feint && prob(50))
+							swap_rmb_intent(/datum/rmb_intent/feint)
+							try_special_attack(target)
+							return TRUE
+					else if(!has_status_effect(/datum/status_effect/debuff/clashcd))
+						if(possible_rmb_intents & /datum/rmb_intent/riposte && rmb_intent != /datum/rmb_intent/riposte && prob(50))
+							swap_rmb_intent(/datum/rmb_intent/riposte)
+							try_special_attack(target)
+							return TRUE
+					else if(!has_status_effect(/datum/status_effect/debuff/baitcd)) //May work sometimes; more than likely it wont however.
+						if(possible_rmb_intents & /datum/rmb_intent/aimed && rmb_intent != /datum/rmb_intent/aimed) //Default to aimed as the final choice to attempt baiting.
+							swap_rmb_intent(/datum/rmb_intent/aimed)
+							try_special_attack(target)
+							return TRUE
+
+		if(!did_we_change_intent) //Always default regardless.
+			rog_intent_change(1)
 		used_intent = a_intent
 		Weapon.melee_attack_chain(src, victim)
 		// attackby and attack_obj handles cooldowns already
@@ -850,6 +905,11 @@
 		npc_choose_attack_zone(victim)
 
 /mob/living/carbon/human/proc/npc_choose_attack_zone(mob/living/victim)
+	if(attack_on_zone <= ATTACKS_UNTIL_SWITCHING_UP)
+		attack_on_zone++
+		return
+	else
+		attack_on_zone = 1
 	// My life for a better way to handle deadite AI.
 	if(mind?.has_antag_datum(/datum/antagonist/zombie))
 		aimheight_change(deadite_get_aimheight(victim))
@@ -866,6 +926,8 @@
 /mob/living/carbon/human/proc/monkey_attack(mob/living/L)
 	if(next_move > world.time)
 		return FALSE // no time to attack this turn!
+	if(has_status_effect(/datum/status_effect/buff/clash))
+		return FALSE //We're clashing right now! Don't fuck us up! Also give the player a chance to respond with a feint.
 
 	npc_choose_attack_zone(L)
 	NPC_THINK("Aiming for \the [zone_selected]!")
@@ -943,3 +1005,70 @@
 		return TRUE
 	else
 		return FALSE
+
+/mob/living/carbon/human/proc/on_client_enter(datum/source, atom/target)
+	SIGNAL_HANDLER
+	if(mode == NPC_AI_OFF)
+		return
+
+	if(mode == NPC_AI_SLEEP)
+		mode = NPC_AI_IDLE
+
+/mob/living/carbon/human/proc/on_client_exit(datum/source, datum/exited)
+	SIGNAL_HANDLER
+	if(mode == NPC_AI_OFF)
+		return
+
+	consider_wakeup()
+
+/mob/living/carbon/human/proc/set_new_cells()
+	if(QDELETED(src)) // Move to nullspace causes move and causes this.
+		return
+	var/turf/our_turf = get_turf(src)
+	if(isnull(our_turf))
+		return
+
+	var/list/cell_collections = our_cells?.recalculate_cells(our_turf)
+
+	for(var/datum/old_grid as anything in cell_collections[2])
+		UnregisterSignal(old_grid, list(SPATIAL_GRID_CELL_ENTERED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS), SPATIAL_GRID_CELL_EXITED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS)))
+
+	for(var/datum/spatial_grid_cell/new_grid as anything in cell_collections[1])
+		RegisterSignal(new_grid, SPATIAL_GRID_CELL_ENTERED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS), PROC_REF(on_client_enter))
+		RegisterSignal(new_grid, SPATIAL_GRID_CELL_EXITED(SPATIAL_GRID_CONTENTS_TYPE_CLIENTS), PROC_REF(on_client_exit))
+	consider_wakeup()
+
+/mob/living/carbon/human/proc/update_grid()
+	SIGNAL_HANDLER
+	set_new_cells()
+
+/mob/living/carbon/human/proc/consider_wakeup()
+	if(mode == NPC_AI_OFF)
+		return
+
+	for(var/datum/spatial_grid_cell/grid as anything in our_cells.member_cells)
+		if(length(grid.client_contents))
+			if(mode != NPC_AI_SLEEP && mode != NPC_AI_IDLE)
+				return TRUE
+			mode = NPC_AI_IDLE
+			return TRUE
+
+	mode = NPC_AI_SLEEP
+	return FALSE
+
+/mob/living/carbon/human/Moved()
+	. = ..()
+	if(mode != NPC_AI_OFF)
+		update_grid()
+
+//NPC SPECIFIC DEBUFF FOR INTENT HANDLING, DO NOT USE ANYWHERE ELSE.
+/datum/status_effect/debuff/swapped_intent_npc
+	id = "swapped_intent_npc"
+	alert_type = /atom/movable/screen/alert/status_effect/debuff/swapped_intent_npc
+	duration = 10 SECONDS
+	status_type = STATUS_EFFECT_UNIQUE
+
+/atom/movable/screen/alert/status_effect/debuff/swapped_intent_npc
+	name = "Swapped Intent Cooldown (NPC)"
+	desc = "I swapped my weapon intent, I must wait before I can do it again."
+	icon_state = "strikecd"

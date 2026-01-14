@@ -6,6 +6,7 @@ GLOBAL_VAR_INIT(round_timer, INITIAL_ROUND_TIMER)
 SUBSYSTEM_DEF(ticker)
 	name = "Ticker"
 	init_order = INIT_ORDER_TICKER
+	lazy_load = FALSE
 
 	priority = FIRE_PRIORITY_TICKER
 	flags = SS_KEEP_TIMING
@@ -68,7 +69,7 @@ SUBSYSTEM_DEF(ticker)
 	/// Realm name, the location name of the current map
 	var/realm_name = "Azure Peak"
 	/// Reports the current ruler's display name
-	var/rulertype = "Grand Duke" 
+	var/rulertype = "Grand Duke"
 	/// The current ruling mob
 	var/rulermob = null
 	/// Current regent mob
@@ -196,7 +197,7 @@ SUBSYSTEM_DEF(ticker)
 				var/mob/dead/new_player/player = i
 				if(player.ready == PLAYER_READY_TO_PLAY)
 					++totalPlayersReady
-			
+
 			if(!gamemode_voted)
 				SSvote.initiate_vote("storyteller", "Psydon", timeLeft/2)
 				gamemode_voted = TRUE
@@ -314,7 +315,7 @@ SUBSYSTEM_DEF(ticker)
 /datum/controller/subsystem/ticker/proc/setup()
 	message_admins(span_boldannounce("Starting game..."))
 	var/init_start = world.timeofday
-		
+
 	if(SSmapping.map_adjustment)
 		realm_name = SSmapping.map_adjustment.realm_name
 	CHECK_TICK
@@ -840,3 +841,5 @@ SUBSYSTEM_DEF(ticker)
 	sunstolen = FALSE
 	settod()
 	SSParticleWeather.run_weather(/datum/particle_weather/rain_gentle, TRUE)
+
+#undef ROUND_START_MUSIC_LIST
