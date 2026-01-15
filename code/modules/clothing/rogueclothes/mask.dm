@@ -563,23 +563,6 @@
 	flags_inv = HIDEFACE|HIDESNOUT
 	sellprice = 25
 
-// /obj/item/clothing/mask/rogue/lordmask/naledi/equipped(mob/user, slot)
-	. = ..()
-	if(ishuman(user))
-		var/mob/living/carbon/human/H = user
-		if(H.merctype == 14)	//Naledi
-			H.remove_status_effect(/datum/status_effect/debuff/lost_naledi_mask)
-			H.remove_stress(/datum/stressevent/naledimasklost)
-
-// /obj/item/clothing/mask/rogue/lordmask/naledi/dropped(mob/user)
-	. = ..()
-	if(ishuman(user))
-		var/mob/living/carbon/human/H = user
-		if(H.merctype == 14)	//Naledi
-			if(!istiefling(user)) //Funny exception
-				H.apply_status_effect(/datum/status_effect/debuff/lost_naledi_mask)
-				H.add_stress(/datum/stressevent/naledimasklost)
-
 /obj/item/clothing/mask/rogue/lordmask/naledi/sojourner
 	name = "sojourner's mask"
 	item_state = "naledimask"
